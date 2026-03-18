@@ -1,0 +1,54 @@
+[gd_scene load_steps=2 format=3 uid="uid://dsydjyyiyuomj"]
+
+[ext_resource type="Script" path="res://scenes/main_menu/Options.cs" id="1_tsbaq"]
+
+[node name="MainMenuOptions" type="Node2D"]
+script = ExtResource("1_tsbaq")
+
+[node name="OptionSections" type="VBoxContainer" parent="."]
+offset_left = 136.0
+offset_top = 92.0
+offset_right = 328.0
+offset_bottom = 207.0
+
+[node name="ResolutionContainer" type="HBoxContainer" parent="OptionSections"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="OptionSections/ResolutionContainer"]
+layout_mode = 2
+text = "Resolution:"
+
+[node name="Resolution" type="OptionButton" parent="OptionSections/ResolutionContainer"]
+layout_mode = 2
+
+[node name="WindowModeContainer" type="HBoxContainer" parent="OptionSections"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="OptionSections/WindowModeContainer"]
+layout_mode = 2
+text = "Window mode:"
+
+[node name="WindowMode" type="OptionButton" parent="OptionSections/WindowModeContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="."]
+offset_left = 160.0
+offset_top = 387.0
+offset_right = 205.0
+offset_bottom = 418.0
+size_flags_horizontal = 2
+size_flags_vertical = 4
+text = "Back"
+metadata/_edit_use_anchors_ = true
+
+[node name="ApplyButton" type="Button" parent="."]
+offset_left = 220.0
+offset_top = 387.0
+offset_right = 272.0
+offset_bottom = 418.0
+text = "Apply"
+
+[connection signal="item_selected" from="OptionSections/ResolutionContainer/Resolution" to="." method="_on_resolution_item_selected"]
+[connection signal="item_selected" from="OptionSections/WindowModeContainer/WindowMode" to="." method="_on_window_mode_item_selected"]
+[connection signal="button_down" from="BackButton" to="." method="_on_back_button_button_down"]
+[connection signal="button_down" from="ApplyButton" to="." method="_on_apply_button_button_down"]

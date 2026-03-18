@@ -1,0 +1,52 @@
+[gd_scene load_steps=2 format=3 uid="uid://m4josmxvaht4"]
+
+[ext_resource type="Script" path="res://scenes/main_menu/MainMenu.cs" id="1_4g8io"]
+
+[node name="MainMenu" type="Control"]
+custom_minimum_size = Vector2(800, 600)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 2
+script = ExtResource("1_4g8io")
+
+[node name="MainMenuContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 104.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainMenuButtons" type="VBoxContainer" parent="MainMenuContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+
+[node name="SingleplayerButton" type="Button" parent="MainMenuContainer/MainMenuButtons"]
+layout_mode = 2
+text = "Singleplayer"
+
+[node name="OptionsButton" type="Button" parent="MainMenuContainer/MainMenuButtons"]
+layout_mode = 2
+text = "Options"
+
+[node name="QuitButton" type="Button" parent="MainMenuContainer/MainMenuButtons"]
+layout_mode = 2
+text = "Quit"
+
+[node name="VSeparator" type="VSeparator" parent="MainMenuContainer"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="SubMenuContainer" type="Container" parent="MainMenuContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+
+[connection signal="pressed" from="MainMenuContainer/MainMenuButtons/SingleplayerButton" to="." method="_on_SingleplayerButton_pressed"]
+[connection signal="button_down" from="MainMenuContainer/MainMenuButtons/OptionsButton" to="." method="_on_options_button_button_down"]
+[connection signal="pressed" from="MainMenuContainer/MainMenuButtons/QuitButton" to="." method="_on_QuitButton_pressed"]

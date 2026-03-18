@@ -1,0 +1,20 @@
+<Project Sdk="Godot.NET.Sdk/4.2.2">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net7.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'ios' ">net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>convey</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Facepunch.Steamworks.Posix.dll" Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+      <HintPath>./dll/Facepunch.Steamworks.Posix.dll</HintPath>
+    </Reference>
+    <Reference Include="Facepunch.Steamworks.Win64.dll" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+      <HintPath>./dll/Facepunch.Steamworks.Win64.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>
