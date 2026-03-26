@@ -26,7 +26,7 @@ public partial class MainMenu : Control
 
 	private async void _on_SingleplayerButton_pressed()
 	{
-		//GetTree().ChangeSceneToFile("res://scenes/main_menu/LobbySceneManager.tscn");
+		GetTree().ChangeSceneToFile("res://scenes/game/Game3d.tscn");
 		GD.Print("MM: single player ");
 	}
 
@@ -35,7 +35,7 @@ public partial class MainMenu : Control
 		// TODO this is just for testing achievements
 		SteamManager.Manager.UnlockSteamAchievement(SteamAchievementsApi.AchievementId.TEST_ACHIEVEMENT_1);
 		SteamManager.Manager.IncrementSteamAchievementStat(SteamAchievementsApi.StatId.OPTIONS_BUTTON_PRESSED);
-
+		
 		GetTree().ChangeSceneToFile("res://scenes/main_menu/Options.tscn");
 	}
 	

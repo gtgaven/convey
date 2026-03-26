@@ -24,6 +24,10 @@ SteamManager="*res://steam_manager/SteamManager.cs"
 
 project/assembly_name="Convey"
 
+[physics]
+
+2d/default_gravity_vector=Vector2(0, 0)
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

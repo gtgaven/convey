@@ -1,0 +1,98 @@
+[gd_scene load_steps=13 format=3 uid="uid://w8871yd58au4"]
+
+[ext_resource type="Script" path="res://scenes/game/Game3d.cs" id="1_8h2pf"]
+[ext_resource type="PackedScene" uid="uid://dymtq150juswi" path="res://scenes/game/Chunk.tscn" id="2_iv5pg"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_u7nic"]
+sky_top_color = Color(0.776428, 0.839993, 0.939737, 1)
+ground_bottom_color = Color(0.742143, 0.661022, 0.504194, 1)
+
+[sub_resource type="Sky" id="Sky_4ud7q"]
+sky_material = SubResource("ProceduralSkyMaterial_u7nic")
+
+[sub_resource type="Environment" id="Environment_jv4db"]
+background_mode = 2
+sky = SubResource("Sky_4ud7q")
+ambient_light_source = 3
+
+[sub_resource type="BoxMesh" id="BoxMesh_6hbdk"]
+size = Vector3(25, 2, 7)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_pygjt"]
+points = PackedVector3Array(-12.5, -1, -3.5, -12.5, 1, -3.5, 12.5, -1, -3.5, -12.5, -1, 3.5, -12.5, 1, 3.5, 12.5, 1, -3.5, 12.5, -1, 3.5, 12.5, 1, 3.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v6iou"]
+size = Vector3(30, 10, 1)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_a163e"]
+points = PackedVector3Array(15, 5, 0.5, 15, 5, -0.5, -15, 5, 0.5, 15, -5, 0.5, 15, -5, -0.5, -15, 5, -0.5, -15, -5, 0.5, -15, -5, -0.5)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_t5uvw"]
+points = PackedVector3Array(15, 5, 0.5, 15, 5, -0.5, -15, 5, 0.5, 15, -5, 0.5, 15, -5, -0.5, -15, 5, -0.5, -15, -5, 0.5, -15, -5, -0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_jsq4o"]
+size = Vector3(30, 1, 20)
+
+[sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_5pokm"]
+points = PackedVector3Array(-15, -0.5, -10, -15, 0.5, -10, 15, -0.5, -10, -15, -0.5, 10, -15, 0.5, 10, 15, 0.5, -10, 15, -0.5, 10, 15, 0.5, 10)
+
+[node name="World" type="Node3D"]
+script = ExtResource("1_8h2pf")
+ChunkScene = ExtResource("2_iv5pg")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_jv4db")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.0362633, 0.956517, -0.289415, -0.25548, 0.271109, 0.928025, 0.966134, 0.107593, 0.234539, -20.3395, 27.6254, 14.8926)
+light_color = Color(0.991818, 0.964197, 0.889674, 1)
+light_energy = 0.5
+shadow_enabled = true
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.360892, 0.932608, 0, -0.932608, 0.360892, 0, 15.0411, 6.05218)
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+constant_linear_velocity = Vector3(2, 0, 0)
+
+[node name="Conveyer" type="MeshInstance3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -3)
+mesh = SubResource("BoxMesh_6hbdk")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -3)
+shape = SubResource("ConvexPolygonShape3D_pygjt")
+
+[node name="StaticBody3D2" type="StaticBody3D" parent="."]
+
+[node name="FrontWall" type="MeshInstance3D" parent="StaticBody3D2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 9.658)
+mesh = SubResource("BoxMesh_v6iou")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="StaticBody3D2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 9.658)
+shape = SubResource("ConvexPolygonShape3D_a163e")
+
+[node name="StaticBody3D3" type="StaticBody3D" parent="."]
+
+[node name="BackWall" type="MeshInstance3D" parent="StaticBody3D3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -10)
+mesh = SubResource("BoxMesh_v6iou")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="StaticBody3D3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -10)
+shape = SubResource("ConvexPolygonShape3D_t5uvw")
+
+[node name="StaticBody3D4" type="StaticBody3D" parent="."]
+
+[node name="FloorWall" type="MeshInstance3D" parent="StaticBody3D4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.323722, 0)
+mesh = SubResource("BoxMesh_jsq4o")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.323722, 0)
+shape = SubResource("ConvexPolygonShape3D_5pokm")

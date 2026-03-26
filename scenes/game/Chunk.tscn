@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://dymtq150juswi"]
+
+[ext_resource type="Script" path="res://scenes/game/Chunk.cs" id="1_i7wws"]
+
+[node name="RigidBody3D" type="RigidBody3D"]
+collision_layer = 2
+collision_mask = 3
+axis_lock_angular_x = true
+axis_lock_angular_z = true
+script = ExtResource("1_i7wws")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+
+[node name="ChunkMesh" type="MeshInstance3D" parent="."]
+skeleton = NodePath("../..")
+
+[connection signal="input_event" from="." to="." method="_on_input_event"]
