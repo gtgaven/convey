@@ -1,15 +1,24 @@
 using Godot;
+using Steamworks.ServerList;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 
 public partial class Chunk : RigidBody3D
 {
+	public static float CHUNK_HEIGHT = 1f;
 	private MeshInstance3D chunkMesh;
 	private CollisionShape3D collisionShape;
 	private bool pickedUp = false;
 	private Vector3 TargetPosition;
+
+	private List<Vector2> topFaceVertices;
 	// Called when the node enters the scene tree for the first time.
+	public Chunk()
+	{
+		topFaceVertices = new List<Vector2>();
+	}
+	
 	public override void _Ready()
 	{
 		Game3d.OnMouseMove += OnMouseMoveCallback;
@@ -44,10 +53,7 @@ public partial class Chunk : RigidBody3D
 	private void OnMouseMoveCallback(Godot.Vector3 pos)
 	{
 		GD.Print(pos);
-		if (pickedUp)
-		{
-			this.TargetPosition = pos;
-		}
+		this.TargetPosition = pos;
 	}
 
 	private void OnMouseReleasedCallback()
@@ -70,6 +76,8 @@ public partial class Chunk : RigidBody3D
 	private void pickUp()
 	{
 		this.GravityScale = 0;
+		this.LinearVelocity = new Vector3(0, 0, 0);
+		this.AngularVelocity = new Vector3(0, 0, 0);
 		//this.collisionShape.Disabled = true;
 		this.pickedUp = true;
 		
@@ -83,35 +91,110 @@ public partial class Chunk : RigidBody3D
 		this.GravityScale = 1;
 	}
 
+	public Chunk sliceInTwain(Vector2 start, Vector2 end)
+	{
+		
+		return this;
+	}
 
-	public void InitializeFromPoints(Vector3 position)
+
+	public void InitializeFromPoints(List<Vector2> topFaceVertices, Vector3 position)
 	{
 		SurfaceTool surfaceTool = new SurfaceTool();
 		surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
+		this.topFaceVertices = topFaceVertices;
 
-		// 3. Define the vertices and associated data (UVs, normals, colors, etc.)
+		// top face vertices + bottom face vertices + top middle vertex + bottom middle vertex
+		int numberOf3dVertices = 2 * topFaceVertices.Count + 2;
+		Span<Vector3> vertices = stackalloc Vector3[numberOf3dVertices];
+		//List<Vector3> shapeVertices = new List<Vector3>(); // used for the polygon shape, doesn't include central points on top or bottom
 
-		// Vertices of a simple plane made of two triangles
-		List<Vector3> vertices = new List<Vector3>()
+		float avgX = 0f;
+		float avgZ = 0f;
+		for (int i = 0; i < topFaceVertices.Count; i++)
 		{
-			new Vector3(-1, 0, -1),
-			new Vector3(1, 0, -1),
-			new Vector3(1, 0, 1),
-			new Vector3(-1, 0, 1)
-		};
+			// topFaceVertices is really the x and z coords, not x and y.
+			Vector3 currentTopFaceVector = new Vector3(topFaceVertices[i].X, CHUNK_HEIGHT, topFaceVertices[i].Y);
+			Vector3 currentBottomFaceVector = new Vector3(topFaceVertices[i].X, 0f, topFaceVertices[i].Y);
+			avgX += currentTopFaceVector.X;
+			avgZ += currentTopFaceVector.Z;
+			vertices[i + 1] = currentTopFaceVector;
+			vertices[topFaceVertices.Count + 1 + i + 1] = currentBottomFaceVector;
 
-		// Indices to form two triangles: (0, 1, 2) and (0, 2, 3)
-		List<int> indices = new List<int>()
+			// shapeVertices.Add(currentTopFaceVector);
+			// shapeVertices.Add(currentBottomFaceVector);
+		}
+
+		avgX /= topFaceVertices.Count;
+		avgZ /= topFaceVertices.Count;
+		Vector3 TOP_MIDDLE = new Vector3(avgX, CHUNK_HEIGHT, avgZ);
+		Vector3 BOTTOM_MIDDLE = new Vector3(avgX, 0f, avgZ);
+
+		vertices[0] = TOP_MIDDLE;
+		vertices[topFaceVertices.Count + 1] = BOTTOM_MIDDLE;
+
+		// example box vertices
+		// #0, 1, 0
+		// #-1, 1, -1
+		// #1, 1, -1
+		// #1, 1, 1
+		// #-1, 1, 1
+		// #0, 0, 0
+		// #-1, 0, -1
+		// #1, 0, -1
+		// #1, 0, 1
+		// #-1, 0, 1
+
+		int numberOfTriangles = 2 * topFaceVertices.Count; // top and bottom faces
+		numberOfTriangles += 2 * topFaceVertices.Count; // each side wall consists of 2 triangles
+		int numberOfIndices = numberOfTriangles * 3; // 3 points for each triangle
+		Span<int> indices = stackalloc int[numberOfIndices];
+		int indicesPerVertex = 4 * 3;
+		for (int i = 0; i < topFaceVertices.Count; i++)
 		{
-			0, 1, 2,
-			0, 2, 3
-		};
+			// top triangle
+			indices[indicesPerVertex * i] = 0;
+			indices[indicesPerVertex * i + 1] = i + 1;
+			if (i + 2 > topFaceVertices.Count)
+			{
+				indices[indicesPerVertex * i + 2] = 1;
+			}
+			else
+			{
+				indices[indicesPerVertex * i + 2] = i + 2;
+			}
+
+			// bottom triangle
+			indices[indicesPerVertex * i + 3] = topFaceVertices.Count + 1;
+			indices[indicesPerVertex * i + 5] = i + topFaceVertices.Count + 1 + 1;
+			if (i + 2 > topFaceVertices.Count)
+			{
+				indices[indicesPerVertex * i + 4] = topFaceVertices.Count + 1 + 1;
+			}
+			else
+			{
+				indices[indicesPerVertex * i + 4] = i + topFaceVertices.Count + 1 + 2;
+			}
+
+			// side wall upper
+			indices[indicesPerVertex * i + 6] = indices[indicesPerVertex * i + 4];
+			indices[indicesPerVertex * i + 7] = indices[indicesPerVertex * i + 2];
+			indices[indicesPerVertex * i + 8] = indices[indicesPerVertex * i + 1];
+			
+
+			// side wall lower
+			indices[indicesPerVertex * i + 9] = indices[indicesPerVertex * i + 5];
+			indices[indicesPerVertex * i + 10] = indices[indicesPerVertex * i + 4];
+			indices[indicesPerVertex * i + 11] = indices[indicesPerVertex * i + 1];
+		}
+		
 
 		// Add the vertices and indices
 		foreach (Vector3 vertex in vertices)
 		{
 			surfaceTool.AddVertex(vertex);
 		}
+
 		foreach (int index in indices)
 		{
 			surfaceTool.AddIndex(index);
@@ -134,8 +217,11 @@ public partial class Chunk : RigidBody3D
 		this.Position = position;
 		this.TargetPosition = position;
 
-		BoxShape3D collisionBox = new BoxShape3D();
-		collisionBox.Size = new Vector3(2, 2, 2);
-		this.collisionShape.Shape = collisionBox;
+		// TODO collision shape will bound the mesh, even if concave, just stick with convex shapes for now,
+		// performing the 'create multiple convex siblings' functionality here is probably going to be some
+		// annoying math..
+		ConvexPolygonShape3D polygonShape = new ConvexPolygonShape3D();
+		polygonShape.Points = vertices.ToArray();
+		this.collisionShape.Shape = polygonShape;
 	}
 }

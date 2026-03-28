@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 using MouseMoveEventEvent = System.Action<Godot.Vector3>;
@@ -11,30 +12,43 @@ public partial class Game3d : Node3D
 	public static event MouseMoveEventEvent OnMouseMove;
 	public static event System.Action OnMouseReleased;
 
+	private Vector3 chunkSpawnPoint;
+	
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		
+		StaticBody3D conveyer = GetNode<StaticBody3D>("Conveyer");
+		chunkSpawnPoint = new Vector3(-25f, conveyer.Position.Y + 1, conveyer.Position.Z);
 	}
 
 	public override void _Input(InputEvent @event)
 	{
 		if (@event is InputEventMouseMotion mouseMotion)
 		{
-			Godot.Vector3? pos = GetMousePosition(mouseMotion.GlobalPosition);
-			if (pos is not null)
-			{
-				Godot.Vector3 p = (Godot.Vector3)pos;
-				Godot.Vector3 clickAndDragPosition = new Godot.Vector3(p.X, p.Y + 2, p.Z);
-				OnMouseMove.Invoke(clickAndDragPosition);
-			}
+			broadcastMouseMove(mouseMotion.GlobalPosition);
 		} 
 		else if (@event is InputEventMouseButton mouseButton)
 		{
-			if (!mouseButton.Pressed)
+			if (mouseButton.Pressed)
+			{
+				broadcastMouseMove(mouseButton.GlobalPosition);
+			}
+			else
 			{
 				OnMouseReleased.Invoke();
 			}
+		}
+	}
+
+	private void broadcastMouseMove(Vector2 globalPosition)
+	{
+		Godot.Vector3? pos = GetMousePosition(globalPosition);
+		if (pos is not null)
+		{
+			Godot.Vector3 p = (Godot.Vector3)pos;
+			Godot.Vector3 clickAndDragPosition = new Godot.Vector3(p.X, p.Y + 2, p.Z);
+			OnMouseMove.Invoke(clickAndDragPosition);
 		}
 	}
 
@@ -47,7 +61,16 @@ public partial class Game3d : Node3D
 
 			Chunk chunk = ChunkScene.Instantiate() as Chunk;
 			this.AddChild(chunk);
-			chunk.InitializeFromPoints(new Vector3(5, 5, 5));
+			List<Vector2> topFaceVertices = new List<Vector2>()
+			{
+				new Vector2(-1, -1),
+				new Vector2(1, -1),
+				new Vector2(1.5f, 0),
+				new Vector2(1, 1),
+				new Vector2(-1, 1),
+				new Vector2(-1.5f, 0),
+			};
+			chunk.InitializeFromPoints(topFaceVertices, chunkSpawnPoint);
 		}
 	}
 
