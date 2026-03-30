@@ -166,3 +166,7 @@ shadow_blur = 0.0
 directional_shadow_mode = 0
 directional_shadow_blend_splits = true
 directional_shadow_max_distance = 40.0
+
+[node name="ChunkSlicer" type="AnimatedSprite3D" parent="."]
+transform = Transform3D(0.2, 0, 0, 0, 1, 0, 0, 0, 15, 0, 10.565, -2)
+axis = 1

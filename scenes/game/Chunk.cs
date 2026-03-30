@@ -41,6 +41,19 @@ public partial class Chunk : RigidBody3D
 		{
 			Position = this.TargetPosition;
 		}
+
+		if (Input.IsActionJustPressed("ui_focus_next"))
+		{
+			// TODO implement
+			// if (!this.onConveyer)
+			// {
+			// 	return;
+			// }
+
+			float sliceX = GetParent().GetNode<AnimatedSprite3D>("ChunkSlicer").Position.X - this.Position.X;
+			GD.Print("slicing at " + sliceX);
+			this.sliceInTwain(sliceX);
+		}
 		
 	}
 
@@ -52,7 +65,6 @@ public partial class Chunk : RigidBody3D
 	
 	private void OnMouseMoveCallback(Godot.Vector3 pos)
 	{
-		GD.Print(pos);
 		this.TargetPosition = pos;
 	}
 
@@ -72,7 +84,6 @@ public partial class Chunk : RigidBody3D
 		}
 	}
 
-
 	private void pickUp()
 	{
 		this.GravityScale = 0;
@@ -91,23 +102,144 @@ public partial class Chunk : RigidBody3D
 		this.GravityScale = 1;
 	}
 
-	public Chunk sliceInTwain(Vector2 start, Vector2 end)
+	private Vector2? getIntersectionPointBetween(Vector2 v0, Vector2 v1, float xOffset)
 	{
+		if (v0.X == v1.X)
+		{
+			// cant intersect with a vertical segment
+			return null;
+		}
+
+		if (v0.X == xOffset)
+		{
+			return v0;
+		}
+
+		bool startIsLessThanOffset = false;
+		if (v0.X < xOffset)
+		{
+			startIsLessThanOffset = true;	
+		}
+
+		if (startIsLessThanOffset && (v1.X <= xOffset))
+		{
+			return null;
+		}
+
+		if (!startIsLessThanOffset && (v1.X >= xOffset))
+		{
+			return null;
+		}
 		
-		return this;
+		float slope = (v1.Y - v0.Y) / (v1.X - v0.X);
+		// y = mx + b
+		// b = y - mx
+		float yIntercept = v0.Y - slope * v0.X;
+		return new Vector2(xOffset, (slope * xOffset) + yIntercept);
+	}
+
+	public void sliceInTwain(float xOffset)
+	{
+
+		List<Vector2> rotatedVertices = new List<Vector2>();
+		GD.Print("rotation= " + this.Rotation);
+		foreach (Vector2 v in this.topFaceVertices)
+		{
+			// TODO
+		}
+		int numberOfIntersections = 0;
+		List<Vector2> leftVertices = new List<Vector2>();
+		List<Vector2> rightVertices = new List<Vector2>();
+		bool addingToLeft = true;
+
+		for (int i = 0; i < this.topFaceVertices.Count - 1; i++)
+		{
+			Vector2 v0 = this.topFaceVertices[i];
+			Vector2 v1 = this.topFaceVertices[i + 1];
+			Vector2? possible = getIntersectionPointBetween(v0, v1, xOffset);
+			if (possible is null)
+			{
+				if (addingToLeft)
+				{
+					leftVertices.Add(v0);
+				}
+				else
+				{
+					rightVertices.Add(v0);
+				}
+			}
+			else
+			{
+				Vector2 intersection = (Vector2)possible;
+				numberOfIntersections++;
+				if (intersection.X == v0.X)
+				{
+					// special case, intersection is on a vertex
+					leftVertices.Add(v0);
+					rightVertices.Add(v0);
+				}
+				else
+				{
+					if (addingToLeft)
+					{
+						leftVertices.Add(v0);
+						leftVertices.Add(intersection);
+						rightVertices.Add(intersection);
+					}
+					else
+					{
+						rightVertices.Add(v0);
+						rightVertices.Add(intersection);
+						leftVertices.Add(intersection);
+					}
+				}
+
+				addingToLeft = !addingToLeft;
+			}
+		}
+
+		if (addingToLeft)
+		{
+			leftVertices.Add(this.topFaceVertices[this.topFaceVertices.Count - 1]);
+		}
+		else
+		{
+			rightVertices.Add(this.topFaceVertices[this.topFaceVertices.Count - 1]);
+		}
+
+		if (numberOfIntersections != 2)
+		{
+			GD.Print("sliceInTwain, but intersections not equal to 2, was " + numberOfIntersections);
+			return;
+		}
+
+		this.InitializeFromPoints(leftVertices, this.Position);
+		PackedScene ps = GD.Load<PackedScene>("res://scenes/game/Chunk.tscn");
+		Chunk rightChunk = ps.Instantiate() as Chunk;
+		GetParent().AddChild(rightChunk);
+		rightChunk.InitializeFromPoints(rightVertices, this.Position, 0.3f);
+
+		foreach (Vector2 v in leftVertices)
+		{
+			GD.Print(v.ToString());
+		}
+
+		GD.Print("...");
+		foreach (Vector2 v in rightVertices)
+		{
+			GD.Print(v.ToString());
+		}
 	}
 
 
-	public void InitializeFromPoints(List<Vector2> topFaceVertices, Vector3 position)
+	public void InitializeFromPoints(List<Vector2> topFaceVertices, Vector3 position, float nudgeRight = 0f)
 	{
 		SurfaceTool surfaceTool = new SurfaceTool();
 		surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
-		this.topFaceVertices = topFaceVertices;
 
 		// top face vertices + bottom face vertices + top middle vertex + bottom middle vertex
 		int numberOf3dVertices = 2 * topFaceVertices.Count + 2;
 		Span<Vector3> vertices = stackalloc Vector3[numberOf3dVertices];
-		//List<Vector3> shapeVertices = new List<Vector3>(); // used for the polygon shape, doesn't include central points on top or bottom
 
 		float avgX = 0f;
 		float avgZ = 0f;
@@ -132,6 +264,21 @@ public partial class Chunk : RigidBody3D
 
 		vertices[0] = TOP_MIDDLE;
 		vertices[topFaceVertices.Count + 1] = BOTTOM_MIDDLE;
+
+		// re-zero middle as "this.Position"
+		for (int i = 0; i < numberOf3dVertices; i++)
+		{
+			vertices[i].X -= TOP_MIDDLE.X;
+			vertices[i].Z -= TOP_MIDDLE.Z;
+		}
+
+		this.topFaceVertices = new List<Vector2>();
+		foreach (Vector2 v in topFaceVertices)
+		{
+			this.topFaceVertices.Add(new Vector2(v.X - TOP_MIDDLE.X, v.Y - TOP_MIDDLE.Z));
+		}
+
+		GD.Print("after normalizing: " + vertices[0].X + ", " + vertices[0].Z);
 
 		// example box vertices
 		// #0, 1, 0
@@ -213,9 +360,12 @@ public partial class Chunk : RigidBody3D
 		// Optional: Assign a material to make it visible (e.g., a standard unshaded material)
 		StandardMaterial3D material = new StandardMaterial3D();
 		material.AlbedoColor = new Color(0.9f, 0.1f, 0.1f);
+
+		Texture2D texture = Globals.Settings.GetSpriteFrames("placeholder").GetFrameTexture("idle", 0);
+		material.AlbedoTexture = texture;
 		this.chunkMesh.Mesh.SurfaceSetMaterial(0, material); // Set material for the first surface
-		this.Position = position;
-		this.TargetPosition = position;
+		this.Position = new Vector3(position.X + TOP_MIDDLE.X + nudgeRight, position.Y, position.Z + TOP_MIDDLE.Z);
+		this.TargetPosition = this.Position;
 
 		// TODO collision shape will bound the mesh, even if concave, just stick with convex shapes for now,
 		// performing the 'create multiple convex siblings' functionality here is probably going to be some

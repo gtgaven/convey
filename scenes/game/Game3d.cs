@@ -13,12 +13,16 @@ public partial class Game3d : Node3D
 	public static event System.Action OnMouseReleased;
 
 	private Vector3 chunkSpawnPoint;
+	private AnimatedSprite3D chunkSlicer;
 	
 
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		StaticBody3D conveyer = GetNode<StaticBody3D>("Conveyer");
+		chunkSlicer = GetNode<AnimatedSprite3D>("ChunkSlicer");
+		chunkSlicer.SpriteFrames = Globals.Settings.GetSpriteFrames("placeholder");
+		chunkSlicer.Play("idle");
 		chunkSpawnPoint = new Vector3(-25f, conveyer.Position.Y + 1, conveyer.Position.Z);
 	}
 
@@ -58,20 +62,25 @@ public partial class Game3d : Node3D
 		
 		if (Input.IsActionJustPressed("ui_accept")){
 			GD.Print("spawning new chunk");
-
-			Chunk chunk = ChunkScene.Instantiate() as Chunk;
-			this.AddChild(chunk);
 			List<Vector2> topFaceVertices = new List<Vector2>()
 			{
-				new Vector2(-1, -1),
-				new Vector2(1, -1),
-				new Vector2(1.5f, 0),
-				new Vector2(1, 1),
-				new Vector2(-1, 1),
-				new Vector2(-1.5f, 0),
+				new Vector2(-2, -2),
+				new Vector2(2, -2),
+				new Vector2(3f, 0),
+				new Vector2(2, 2),
+				new Vector2(-2, 2),
+				new Vector2(-3f, 0),
 			};
-			chunk.InitializeFromPoints(topFaceVertices, chunkSpawnPoint);
+
+			this.AddChunkToScene(topFaceVertices, this.chunkSpawnPoint);
 		}
+	}
+
+	public void AddChunkToScene(List<Vector2> topFaceVertices, Vector3 position)
+	{
+		Chunk chunk = ChunkScene.Instantiate() as Chunk;
+		this.AddChild(chunk);
+		chunk.InitializeFromPoints(topFaceVertices, chunkSpawnPoint);
 	}
 
 	public Vector3? GetMousePosition(Vector2 mouseCoordinate)
