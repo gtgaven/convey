@@ -14,4 +14,6 @@ script = ExtResource("1_i7wws")
 [node name="ChunkMesh" type="MeshInstance3D" parent="."]
 skeleton = NodePath("../..")
 
+[node name="CenterPoint" type="AnimatedSprite3D" parent="."]
+
 [connection signal="input_event" from="." to="." method="_on_input_event"]

@@ -14,6 +14,9 @@ public partial class Game3d : Node3D
 
 	private Vector3 chunkSpawnPoint;
 	private AnimatedSprite3D chunkSlicer;
+	private Camera3D camera;
+	private Vector3 normalCameraPosition;
+	private Vector3 normalCameraRotation;
 	
 
 	// Called when the node enters the scene tree for the first time.
@@ -24,6 +27,10 @@ public partial class Game3d : Node3D
 		chunkSlicer.SpriteFrames = Globals.Settings.GetSpriteFrames("placeholder");
 		chunkSlicer.Play("idle");
 		chunkSpawnPoint = new Vector3(-25f, conveyer.Position.Y + 1, conveyer.Position.Z);
+		this.camera = GetNode<Camera3D>("Camera3D");
+		this.normalCameraPosition = this.camera.Position;
+		this.normalCameraRotation = this.camera.Rotation;
+
 	}
 
 	public override void _Input(InputEvent @event)
@@ -74,6 +81,17 @@ public partial class Game3d : Node3D
 
 			this.AddChunkToScene(topFaceVertices, this.chunkSpawnPoint);
 		}
+
+		if (Input.IsActionPressed("ui_up"))
+		{
+			this.camera.Position = this.camera.Position.Lerp(new Vector3(this.normalCameraPosition.X, this.normalCameraPosition.Y - 10f, this.normalCameraPosition.Z - 2f), 2f * (float)delta);
+			this.camera.Rotation = this.camera.Rotation.Lerp(Vector3.Zero, 2f * (float)delta);
+		} 
+		else 
+		{
+			this.camera.Position = this.camera.Position.Lerp(this.normalCameraPosition, 5.0f * (float)delta);
+			this.camera.Rotation = this.camera.Rotation.Lerp(this.normalCameraRotation, 5.0f * (float)delta);
+		}
 	}
 
 	public void AddChunkToScene(List<Vector2> topFaceVertices, Vector3 position)
@@ -97,4 +115,25 @@ public partial class Game3d : Node3D
 
 		return null;
 	}
+
+
+	private void _on_conveyer_area_body_entered(Node3D body)
+	{
+		if (body is Chunk)
+		{
+			Chunk c = (Chunk)body;
+			c.setOnConveyer(true);
+		}
+	}
+
+
+	private void _on_conveyer_area_body_exited(Node3D body)
+	{
+		if (body is Chunk)
+		{
+			Chunk c = (Chunk)body;
+			c.setOnConveyer(false);
+		}
+	}
+
 }

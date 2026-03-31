@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://w8871yd58au4"]
+[gd_scene load_steps=20 format=3 uid="uid://w8871yd58au4"]
 
 [ext_resource type="Script" path="res://scenes/game/Game3d.cs" id="1_8h2pf"]
 [ext_resource type="PackedScene" uid="uid://dymtq150juswi" path="res://scenes/game/Chunk.tscn" id="2_iv5pg"]
@@ -53,6 +53,8 @@ points = PackedVector3Array(-0.125, -5, -6, 0.125, -5, -6, -0.125, -5, 6, -0.125
 
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_a52nr"]
 points = PackedVector3Array(-0.125, -5, -6, 0.125, -5, -6, -0.125, -5, 6, -0.125, 5, -6, 0.125, 5, -6, 0.125, -5, 6, -0.125, 5, 6, 0.125, 5, 6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_twn6i"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_8h2pf")
@@ -170,3 +172,15 @@ directional_shadow_max_distance = 40.0
 [node name="ChunkSlicer" type="AnimatedSprite3D" parent="."]
 transform = Transform3D(0.2, 0, 0, 0, 1, 0, 0, 0, 15, 0, 10.565, -2)
 axis = 1
+
+[node name="ConveyerArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.27718, -5.18427)
+collision_mask = 3
+input_ray_pickable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ConveyerArea"]
+transform = Transform3D(12, 0, 0, 0, 3, 0, 0, 0, 9, 0, 0, 0)
+shape = SubResource("BoxShape3D_twn6i")
+
+[connection signal="body_entered" from="ConveyerArea" to="." method="_on_conveyer_area_body_entered"]
+[connection signal="body_exited" from="ConveyerArea" to="." method="_on_conveyer_area_body_exited"]

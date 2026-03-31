@@ -12,6 +12,8 @@ public partial class Chunk : RigidBody3D
 	private bool pickedUp = false;
 	private Vector3 TargetPosition;
 
+	private bool onConveyer;
+
 	private List<Vector2> topFaceVertices;
 	// Called when the node enters the scene tree for the first time.
 	public Chunk()
@@ -44,18 +46,24 @@ public partial class Chunk : RigidBody3D
 
 		if (Input.IsActionJustPressed("ui_focus_next"))
 		{
-			// TODO implement
-			// if (!this.onConveyer)
-			// {
-			// 	return;
-			// }
+			if (!this.onConveyer)
+			{
+				return;
+			}
 
 			float sliceX = GetParent().GetNode<AnimatedSprite3D>("ChunkSlicer").Position.X - this.Position.X;
-			GD.Print("slicing at " + sliceX);
+			
+			GD.Print("slicing at " + sliceX + " this position x = " + this.Position.X + " this rotationY = " + this.RotationDegrees.Y);
 			this.sliceInTwain(sliceX);
 		}
-		
 	}
+
+	public void setOnConveyer(bool onConveyer)
+	{
+		GD.Print("setting conveyer status to " + onConveyer);
+		this.onConveyer = onConveyer;
+	}
+
 
 	private void _on_static_body_3d_mouse_entered()
 	{
@@ -138,24 +146,37 @@ public partial class Chunk : RigidBody3D
 		return new Vector2(xOffset, (slope * xOffset) + yIntercept);
 	}
 
+	private List<Vector2> getRotatedTopFaceVertices(double angle)
+	{
+		List<Vector2> rotatedVertices = new List<Vector2>();
+		foreach (Vector2 v in this.topFaceVertices)
+		{
+			double rotatedX = ((double)v.X * Math.Cos(angle)) - ((double)v.Y * Math.Sin(angle));
+			double rotatedY = ((double)v.X * Math.Sin(angle)) + ((double)v.Y * Math.Cos(angle));
+			rotatedVertices.Add(new Vector2((float)rotatedX, (float)rotatedY));
+		}
+
+		return rotatedVertices;
+	}
+
 	public void sliceInTwain(float xOffset)
 	{
 
 		List<Vector2> rotatedVertices = new List<Vector2>();
-		GD.Print("rotation= " + this.Rotation);
-		foreach (Vector2 v in this.topFaceVertices)
-		{
-			// TODO
-		}
+		GD.Print("rotation= " + this.RotationDegrees);
+		
+		rotatedVertices = getRotatedTopFaceVertices(this.Rotation.Y * -1f);
 		int numberOfIntersections = 0;
 		List<Vector2> leftVertices = new List<Vector2>();
 		List<Vector2> rightVertices = new List<Vector2>();
-		bool addingToLeft = true;
+		bool addingToLeft = this.RotationDegrees.Y < 90f && this.RotationDegrees.Y > -90f;
 
-		for (int i = 0; i < this.topFaceVertices.Count - 1; i++)
+		
+
+		for (int i = 0; i < rotatedVertices.Count - 1; i++)
 		{
-			Vector2 v0 = this.topFaceVertices[i];
-			Vector2 v1 = this.topFaceVertices[i + 1];
+			Vector2 v0 = rotatedVertices[i];
+			Vector2 v1 = rotatedVertices[i + 1];
 			Vector2? possible = getIntersectionPointBetween(v0, v1, xOffset);
 			if (possible is null)
 			{
@@ -200,11 +221,11 @@ public partial class Chunk : RigidBody3D
 
 		if (addingToLeft)
 		{
-			leftVertices.Add(this.topFaceVertices[this.topFaceVertices.Count - 1]);
+			leftVertices.Add(rotatedVertices[rotatedVertices.Count - 1]);
 		}
 		else
 		{
-			rightVertices.Add(this.topFaceVertices[this.topFaceVertices.Count - 1]);
+			rightVertices.Add(rotatedVertices[rotatedVertices.Count - 1]);
 		}
 
 		if (numberOfIntersections != 2)
@@ -213,6 +234,7 @@ public partial class Chunk : RigidBody3D
 			return;
 		}
 
+		// TODO this needs to change from this.Position to take into account new center, no?
 		this.InitializeFromPoints(leftVertices, this.Position);
 		PackedScene ps = GD.Load<PackedScene>("res://scenes/game/Chunk.tscn");
 		Chunk rightChunk = ps.Instantiate() as Chunk;
@@ -231,9 +253,9 @@ public partial class Chunk : RigidBody3D
 		}
 	}
 
-
 	public void InitializeFromPoints(List<Vector2> topFaceVertices, Vector3 position, float nudgeRight = 0f)
 	{
+		this.Rotation = new Vector3(0,0,0);
 		SurfaceTool surfaceTool = new SurfaceTool();
 		surfaceTool.Begin(Mesh.PrimitiveType.Triangles);
 
@@ -252,9 +274,6 @@ public partial class Chunk : RigidBody3D
 			avgZ += currentTopFaceVector.Z;
 			vertices[i + 1] = currentTopFaceVector;
 			vertices[topFaceVertices.Count + 1 + i + 1] = currentBottomFaceVector;
-
-			// shapeVertices.Add(currentTopFaceVector);
-			// shapeVertices.Add(currentBottomFaceVector);
 		}
 
 		avgX /= topFaceVertices.Count;
@@ -266,19 +285,25 @@ public partial class Chunk : RigidBody3D
 		vertices[topFaceVertices.Count + 1] = BOTTOM_MIDDLE;
 
 		// re-zero middle as "this.Position"
+		//////////////
 		for (int i = 0; i < numberOf3dVertices; i++)
 		{
 			vertices[i].X -= TOP_MIDDLE.X;
 			vertices[i].Z -= TOP_MIDDLE.Z;
 		}
 
+		AnimatedSprite3D center = GetNode<AnimatedSprite3D>("CenterPoint");
+		center.Position = vertices[0];
+		center.SpriteFrames = Globals.Settings.GetSpriteFrames("placeholder");
+		center.Play("idle");
+
 		this.topFaceVertices = new List<Vector2>();
 		foreach (Vector2 v in topFaceVertices)
 		{
 			this.topFaceVertices.Add(new Vector2(v.X - TOP_MIDDLE.X, v.Y - TOP_MIDDLE.Z));
 		}
+		//////////////
 
-		GD.Print("after normalizing: " + vertices[0].X + ", " + vertices[0].Z);
 
 		// example box vertices
 		// #0, 1, 0
