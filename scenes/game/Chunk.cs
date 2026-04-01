@@ -1,6 +1,7 @@
 using Godot;
 using Steamworks.ServerList;
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks.Dataflow;
 
@@ -52,15 +53,12 @@ public partial class Chunk : RigidBody3D
 			}
 
 			float sliceX = GetParent().GetNode<AnimatedSprite3D>("ChunkSlicer").Position.X - this.Position.X;
-			
-			GD.Print("slicing at " + sliceX + " this position x = " + this.Position.X + " this rotationY = " + this.RotationDegrees.Y);
 			this.sliceInTwain(sliceX);
 		}
 	}
 
 	public void setOnConveyer(bool onConveyer)
 	{
-		GD.Print("setting conveyer status to " + onConveyer);
 		this.onConveyer = onConveyer;
 	}
 
@@ -79,6 +77,18 @@ public partial class Chunk : RigidBody3D
 	private void OnMouseReleasedCallback()
 	{
 		this.putDown();
+	}
+
+	public string ToString()
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.Append("position x = " + this.Position.X + " this rotationY = " + this.RotationDegrees.Y + "\n");
+		foreach (Vector2 v in this.topFaceVertices)
+		{
+			sb.Append("" + v.X + ", " + v.Y + "\n");
+		}
+
+		return sb.ToString();
 	}
 
 	private void _on_input_event(Node camera, InputEvent @event, Vector3 position, Vector3 normal, long shape_idx)
@@ -161,22 +171,28 @@ public partial class Chunk : RigidBody3D
 
 	public void sliceInTwain(float xOffset)
 	{
-
 		List<Vector2> rotatedVertices = new List<Vector2>();
-		GD.Print("rotation= " + this.RotationDegrees);
-		
 		rotatedVertices = getRotatedTopFaceVertices(this.Rotation.Y * -1f);
 		int numberOfIntersections = 0;
 		List<Vector2> leftVertices = new List<Vector2>();
 		List<Vector2> rightVertices = new List<Vector2>();
 		bool addingToLeft = this.RotationDegrees.Y < 90f && this.RotationDegrees.Y > -90f;
 
-		
-
-		for (int i = 0; i < rotatedVertices.Count - 1; i++)
+		for (int i = 0; i < rotatedVertices.Count; i++)
 		{
 			Vector2 v0 = rotatedVertices[i];
-			Vector2 v1 = rotatedVertices[i + 1];
+			Vector2 v1;
+			if (i == rotatedVertices.Count - 1)
+			{
+				// calculate intersect from last vertex to the first one,
+				// obviously only works because the vertices are in order.
+				v1 = rotatedVertices[0];
+			}
+			else
+			{
+				v1 = rotatedVertices[i + 1];
+			}
+
 			Vector2? possible = getIntersectionPointBetween(v0, v1, xOffset);
 			if (possible is null)
 			{
@@ -219,15 +235,6 @@ public partial class Chunk : RigidBody3D
 			}
 		}
 
-		if (addingToLeft)
-		{
-			leftVertices.Add(rotatedVertices[rotatedVertices.Count - 1]);
-		}
-		else
-		{
-			rightVertices.Add(rotatedVertices[rotatedVertices.Count - 1]);
-		}
-
 		if (numberOfIntersections != 2)
 		{
 			GD.Print("sliceInTwain, but intersections not equal to 2, was " + numberOfIntersections);
@@ -240,17 +247,6 @@ public partial class Chunk : RigidBody3D
 		Chunk rightChunk = ps.Instantiate() as Chunk;
 		GetParent().AddChild(rightChunk);
 		rightChunk.InitializeFromPoints(rightVertices, this.Position, 0.3f);
-
-		foreach (Vector2 v in leftVertices)
-		{
-			GD.Print(v.ToString());
-		}
-
-		GD.Print("...");
-		foreach (Vector2 v in rightVertices)
-		{
-			GD.Print(v.ToString());
-		}
 	}
 
 	public void InitializeFromPoints(List<Vector2> topFaceVertices, Vector3 position, float nudgeRight = 0f)

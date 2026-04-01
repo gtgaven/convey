@@ -73,10 +73,10 @@ public partial class Game3d : Node3D
 			{
 				new Vector2(-2, -2),
 				new Vector2(2, -2),
-				new Vector2(3f, 0),
+				//new Vector2(3f, 0),
 				new Vector2(2, 2),
 				new Vector2(-2, 2),
-				new Vector2(-3f, 0),
+				//new Vector2(-3f, 0),
 			};
 
 			this.AddChunkToScene(topFaceVertices, this.chunkSpawnPoint);
