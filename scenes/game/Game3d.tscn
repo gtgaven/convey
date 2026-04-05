@@ -1,7 +1,8 @@
-[gd_scene load_steps=20 format=3 uid="uid://w8871yd58au4"]
+[gd_scene load_steps=22 format=3 uid="uid://w8871yd58au4"]
 
 [ext_resource type="Script" path="res://scenes/game/Game3d.cs" id="1_8h2pf"]
 [ext_resource type="PackedScene" uid="uid://dymtq150juswi" path="res://scenes/game/Chunk.tscn" id="2_iv5pg"]
+[ext_resource type="Script" path="res://scenes/game/ObjectiveArea.cs" id="3_cud6c"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_u7nic"]
 sky_top_color = Color(0.776428, 0.839993, 0.939737, 1)
@@ -55,6 +56,9 @@ points = PackedVector3Array(-0.125, -5, -6, 0.125, -5, -6, -0.125, -5, 6, -0.125
 points = PackedVector3Array(-0.125, -5, -6, 0.125, -5, -6, -0.125, -5, 6, -0.125, 5, -6, 0.125, 5, -6, 0.125, -5, 6, -0.125, 5, 6, 0.125, 5, 6)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_twn6i"]
+size = Vector3(12, 3, 9)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_cbjup"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1_8h2pf")
@@ -64,7 +68,7 @@ ChunkScene = ExtResource("2_iv5pg")
 environment = SubResource("Environment_jv4db")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.360892, 0.932608, 0, -0.932608, 0.360892, 0, 22.7037, 6.05218)
+transform = Transform3D(1, 0, 0, 0, 0.360892, 0.932608, 0, -0.932608, 0.360892, 0, 22.7037, 4.12125)
 
 [node name="Conveyer" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, -5.75)
@@ -124,10 +128,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -10)
 shape = SubResource("ConvexPolygonShape3D_ndjbb")
 
 [node name="StaticBody3D4" type="StaticBody3D" parent="."]
-constant_angular_velocity = Vector3(0, 0.349066, 0)
 
 [node name="FloorWall" type="MeshInstance3D" parent="StaticBody3D4"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.323722, 0)
 mesh = SubResource("BoxMesh_jsq4o")
 skeleton = NodePath("../..")
 
@@ -176,11 +178,30 @@ axis = 1
 [node name="ConveyerArea" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.27718, -5.18427)
 collision_mask = 3
-input_ray_pickable = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ConveyerArea"]
-transform = Transform3D(12, 0, 0, 0, 3, 0, 0, 0, 9, 0, 0, 0)
 shape = SubResource("BoxShape3D_twn6i")
+
+[node name="ObjectiveArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 4)
+input_ray_pickable = false
+script = ExtResource("3_cud6c")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ObjectiveArea"]
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 10.0
+autostart = true
+
+[node name="DeletionArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 5, -5.856)
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeletionArea"]
+transform = Transform3D(15, 0, 0, 0, 15, 0, 0, 0, 15, 0, 0, 0)
+shape = SubResource("SphereShape3D_cbjup")
 
 [connection signal="body_entered" from="ConveyerArea" to="." method="_on_conveyer_area_body_entered"]
 [connection signal="body_exited" from="ConveyerArea" to="." method="_on_conveyer_area_body_exited"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
+[connection signal="body_entered" from="DeletionArea" to="." method="_on_deletion_area_body_entered"]
