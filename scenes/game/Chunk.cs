@@ -39,6 +39,7 @@ public partial class Chunk : RigidBody3D
 	{
 		Game3d.OnMouseMove += OnMouseMoveCallback;
 		Game3d.OnMouseClicked += OnMouseClickedCallback;
+		Game3d.OnMouseRightClicked += OnMouseRightClickedCallback;
 		this.chunkMesh = GetNode<MeshInstance3D>("ChunkMesh");
 		this.collisionShape = GetNode<CollisionShape3D>("CollisionShape3D");
 	}
@@ -47,6 +48,7 @@ public partial class Chunk : RigidBody3D
 	{
 		Game3d.OnMouseMove -= OnMouseMoveCallback;
 		Game3d.OnMouseClicked -= OnMouseClickedCallback;
+		Game3d.OnMouseRightClicked -= OnMouseRightClickedCallback;
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -192,6 +194,15 @@ public partial class Chunk : RigidBody3D
 		}
 	}
 
+	private void OnMouseRightClickedCallback()
+	{
+		if (this.pickedUp)
+		{
+			//this.Rotation = new Vector3(this.Rotation.X, this.Rotation.Y + (Mathf.Pi / 2), this.Rotation.Z);
+			this.RotateY(Mathf.Pi / 2);
+		}
+	}
+
 	public override string ToString()
 	{
 		StringBuilder sb = new StringBuilder();
@@ -208,7 +219,7 @@ public partial class Chunk : RigidBody3D
 	{
 		this.GravityScale = 0;
 		this.LinearVelocity = new Vector3(0, 0, 0);
-		this.AngularVelocity = new Vector3(0, 0, 0);
+		//this.AngularVelocity = new Vector3(0, 0, 0);
 		//this.collisionShape.Disabled = true;
 		this.pickedUp = true;
 		this.DetermineAndSetVisualState();
@@ -462,11 +473,11 @@ public partial class Chunk : RigidBody3D
 		{
 			if (i != topFaceVertices.Count - 1)
 			{
-				this.area += areaOfTriangle(this.topFaceVertices[i], this.topFaceVertices[i+1]);
+				this.area += GeneralUtilities.AreaOfTriangle(this.topFaceVertices[i], this.topFaceVertices[i+1]);
 			}
 			else
 			{
-				this.area += areaOfTriangle(this.topFaceVertices[i], this.topFaceVertices[0]);
+				this.area += GeneralUtilities.AreaOfTriangle(this.topFaceVertices[i], this.topFaceVertices[0]);
 			}
 			
 			// top triangle
@@ -552,9 +563,8 @@ public partial class Chunk : RigidBody3D
 		this.QueueFree();
 	}
 
-	private float areaOfTriangle(Vector2 b, Vector2 c)
+	public float GetArea()
 	{
-		// triangle made up of (0,0), (b.X,b.Y), (c.X,c.Y)
-		return 0.5f * Mathf.Abs((b.X * c.Y) + (c.X * (0f - b.Y)));
+		return this.area;
 	}
 }

@@ -1,8 +1,9 @@
-[gd_scene load_steps=22 format=3 uid="uid://w8871yd58au4"]
+[gd_scene load_steps=24 format=3 uid="uid://w8871yd58au4"]
 
 [ext_resource type="Script" path="res://scenes/game/Game3d.cs" id="1_8h2pf"]
 [ext_resource type="PackedScene" uid="uid://dymtq150juswi" path="res://scenes/game/Chunk.tscn" id="2_iv5pg"]
 [ext_resource type="Script" path="res://scenes/game/ObjectiveArea.cs" id="3_cud6c"]
+[ext_resource type="PackedScene" uid="uid://bqxve2pibpamq" path="res://scenes/ui/ControlUi.tscn" id="3_lxq8d"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_u7nic"]
 sky_top_color = Color(0.776428, 0.839993, 0.939737, 1)
@@ -37,6 +38,9 @@ points = PackedVector3Array(-0.125, -7.5, -10, 0.125, -7.5, -10, -0.125, -7.5, 1
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_tosbe"]
 points = PackedVector3Array(-0.125, -7.5, -10, 0.125, -7.5, -10, -0.125, -7.5, 10, -0.125, 7.5, -10, 0.125, 7.5, -10, 0.125, -7.5, 10, -0.125, 7.5, 10, 0.125, 7.5, 10)
 
+[sub_resource type="ViewportTexture" id="ViewportTexture_1nt87"]
+viewport_path = NodePath("UiViewport")
+
 [sub_resource type="ConvexPolygonShape3D" id="ConvexPolygonShape3D_ndjbb"]
 points = PackedVector3Array(15, 12.5, 0.125, 15, 12.5, -0.125, -15, 12.5, 0.125, 15, -12.5, 0.125, 15, -12.5, -0.125, -15, 12.5, -0.125, -15, -12.5, 0.125, -15, -12.5, -0.125)
 
@@ -63,6 +67,7 @@ size = Vector3(12, 3, 9)
 [node name="World" type="Node3D"]
 script = ExtResource("1_8h2pf")
 ChunkScene = ExtResource("2_iv5pg")
+ControlUiScene = ExtResource("3_lxq8d")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jv4db")
@@ -104,58 +109,62 @@ mesh = SubResource("BoxMesh_weqyo")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.03854, 0)
 shape = SubResource("ConvexPolygonShape3D_r6wqr")
 
-[node name="StaticBody3D9" type="StaticBody3D" parent="."]
+[node name="RightWallTop" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.9, 12.5, 0)
 
-[node name="RightWallTop" type="MeshInstance3D" parent="StaticBody3D9"]
+[node name="RightWallTop" type="MeshInstance3D" parent="RightWallTop"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.03854, 0)
 mesh = SubResource("BoxMesh_weqyo")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D9"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RightWallTop"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.03854, 0)
 shape = SubResource("ConvexPolygonShape3D_tosbe")
 
-[node name="StaticBody3D3" type="StaticBody3D" parent="."]
+[node name="BackWall" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.5, 0)
 
-[node name="BackWall" type="MeshInstance3D" parent="StaticBody3D3"]
+[node name="Sprite3D" type="Sprite3D" parent="BackWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -9.5)
+texture = SubResource("ViewportTexture_1nt87")
+
+[node name="BackWall" type="MeshInstance3D" parent="BackWall"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -10)
 mesh = SubResource("BoxMesh_v6iou")
 skeleton = NodePath("../..")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D3"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BackWall"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -10)
 shape = SubResource("ConvexPolygonShape3D_ndjbb")
 
-[node name="StaticBody3D4" type="StaticBody3D" parent="."]
+[node name="FloorWall" type="StaticBody3D" parent="."]
 
-[node name="FloorWall" type="MeshInstance3D" parent="StaticBody3D4"]
+[node name="FloorWall" type="MeshInstance3D" parent="FloorWall"]
 mesh = SubResource("BoxMesh_jsq4o")
 skeleton = NodePath("../..")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D4"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FloorWall"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.323722, 0)
 shape = SubResource("ConvexPolygonShape3D_5pokm")
 
-[node name="StaticBody3D7" type="StaticBody3D" parent="."]
+[node name="LeftWallBottom" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.9, 5, 5)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D7"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="LeftWallBottom"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0874457, -1.0806)
 mesh = SubResource("BoxMesh_5jul0")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D7"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LeftWallBottom"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0874457, -1.0806)
 shape = SubResource("ConvexPolygonShape3D_glc20")
 
-[node name="StaticBody3D8" type="StaticBody3D" parent="."]
+[node name="RightWallBottom" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.9, 5, 5)
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D8"]
+[node name="MeshInstance3D" type="MeshInstance3D" parent="RightWallBottom"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0874457, -1.0806)
 mesh = SubResource("BoxMesh_5jul0")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D8"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RightWallBottom"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0874457, -1.0806)
 shape = SubResource("ConvexPolygonShape3D_a52nr")
 
@@ -183,15 +192,11 @@ collision_mask = 3
 shape = SubResource("BoxShape3D_twn6i")
 
 [node name="ObjectiveArea" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 4)
 input_ray_pickable = false
 script = ExtResource("3_cud6c")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ObjectiveArea"]
-
-[node name="Timer" type="Timer" parent="."]
-wait_time = 10.0
-autostart = true
 
 [node name="DeletionArea" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 5, -5.856)
@@ -201,7 +206,15 @@ collision_mask = 3
 transform = Transform3D(15, 0, 0, 0, 15, 0, 0, 0, 15, 0, 0, 0)
 shape = SubResource("SphereShape3D_cbjup")
 
+[node name="Timer" type="Timer" parent="."]
+wait_time = 30.0
+autostart = true
+
+[node name="UiViewport" type="SubViewport" parent="."]
+transparent_bg = true
+size = Vector2i(1600, 900)
+
 [connection signal="body_entered" from="ConveyerArea" to="." method="_on_conveyer_area_body_entered"]
 [connection signal="body_exited" from="ConveyerArea" to="." method="_on_conveyer_area_body_exited"]
-[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]
 [connection signal="body_entered" from="DeletionArea" to="." method="_on_deletion_area_body_entered"]
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

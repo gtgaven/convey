@@ -2,13 +2,28 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
+public class ObjectiveChunkWorthInfo
+{
+	public float PercentageFilled {get; set;}
+	public float SellWorth {get; set;}
+	public int NumChunks {get; set;}
+	public ObjectiveChunkWorthInfo()
+	{
+		PercentageFilled = 0f;
+		SellWorth = 0f;
+		NumChunks = 0;
+	}
+}
+
 public partial class ObjectiveArea : Area3D
 {
 	private List<Vector2> topFaceVerticesAbsolute;
+	private float area;
 
 	public ObjectiveArea()
 	{
 		topFaceVerticesAbsolute = new List<Vector2>();
+		area = 0f;
 	}
 
 	public bool IsChunkWithinArea(Chunk c)
@@ -40,5 +55,43 @@ public partial class ObjectiveArea : Area3D
 		ConvexPolygonShape3D polygonShape = new ConvexPolygonShape3D();
 		polygonShape.Points = objVertices.ToArray();
 		GetNode<CollisionShape3D>("CollisionShape3D").Shape = polygonShape;
+
+		// TODO calculate area
+	}
+
+	public ObjectiveChunkWorthInfo SellChunks()
+	{
+		return this.IterateOverChunksInObjective(true);
+	}
+
+	public ObjectiveChunkWorthInfo IterateOverChunksInObjective(bool deleteChunks)
+	{
+		ObjectiveChunkWorthInfo ocwi = new ObjectiveChunkWorthInfo();
+		float totalAreaOfChunks = 0f;
+		foreach (Node n in GetParent().GetChildren())
+		{
+			if (n is Chunk c)
+			{
+				if (this.IsChunkWithinArea(c))
+				{
+					totalAreaOfChunks += c.GetArea();
+					ocwi.NumChunks++;
+					if (deleteChunks)
+					{
+						c.QueueFree();
+					}
+
+				}
+			}
+		}
+
+		if (totalAreaOfChunks > this.area)
+		{
+			GD.Print("Error, chunk area is greater than objective area..?");
+		}
+
+		ocwi.PercentageFilled = (totalAreaOfChunks / this.area);
+		ocwi.SellWorth = 50;//TODO
+		return ocwi;
 	}
 }

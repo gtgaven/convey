@@ -9,8 +9,12 @@ public partial class Game3d : Node3D
 	[Export]
 	PackedScene ChunkScene;
 
+	[Export]
+	PackedScene ControlUiScene;
+
 	public static event MouseMoveEventEvent OnMouseMove;
-	public static event System.Action OnMouseClicked; // press and release
+	public static event System.Action OnMouseClicked;
+	public static event System.Action OnMouseRightClicked;
 
 	private Vector3 chunkSpawnPoint;
 	private AnimatedSprite3D chunkSlicer;
@@ -18,6 +22,8 @@ public partial class Game3d : Node3D
 	private Vector3 normalCameraPosition;
 	private Vector3 normalCameraRotation;
 	public ObjectiveArea Obj;
+	private ControlUi controlUi;
+	private Godot.Timer timer;
 	
 
 	// Called when the node enters the scene tree for the first time.
@@ -25,6 +31,7 @@ public partial class Game3d : Node3D
 	{
 		StaticBody3D conveyer = GetNode<StaticBody3D>("Conveyer");
 		Obj = GetNode<ObjectiveArea>("ObjectiveArea");
+		timer = GetNode<Godot.Timer>("Timer");
 		chunkSlicer = GetNode<AnimatedSprite3D>("ChunkSlicer");
 		chunkSlicer.SpriteFrames = Globals.Settings.GetSpriteFrames("placeholder");
 		chunkSlicer.Play("idle");
@@ -34,11 +41,14 @@ public partial class Game3d : Node3D
 		this.normalCameraPosition = this.camera.Position;
 		this.normalCameraRotation = this.camera.Rotation;
 
+		this.controlUi = ControlUiScene.Instantiate() as ControlUi;
+		GetNode<SubViewport>("UiViewport").AddChild(this.controlUi);
+
 		List<Vector2> objectiveVertices = new List<Vector2>()
 		{
-			new Vector2(-3, -3),
-			new Vector2(3, 0),
-			new Vector2(-3, 3)
+			new Vector2(-3, -4),
+			new Vector2(4, 0),
+			new Vector2(-3, 4)
 		};
 		this.Obj.InitializeArea(objectiveVertices);
 		CreateNewChunk();
@@ -56,6 +66,10 @@ public partial class Game3d : Node3D
 			{
 				broadcastMouseMove(mouseButton.GlobalPosition);
 				OnMouseClicked.Invoke();
+			}
+			else if (mouseButton.ButtonIndex == MouseButton.Right && mouseButton.Pressed)
+			{
+				OnMouseRightClicked.Invoke();
 			}
 		}
 	}
@@ -87,6 +101,8 @@ public partial class Game3d : Node3D
 			this.camera.Position = this.camera.Position.Lerp(this.normalCameraPosition, 5.0f * (float)delta);
 			this.camera.Rotation = this.camera.Rotation.Lerp(this.normalCameraRotation, 5.0f * (float)delta);
 		}
+
+		this.controlUi.SetTimeRemaining(timer.TimeLeft);
 	}
 
 	public void AddChunkToScene(List<Vector2> topFaceVertices, Vector3 position)
@@ -134,16 +150,8 @@ public partial class Game3d : Node3D
 
 	private void sellChunks()
 	{
-		foreach (Node n in GetChildren())
-		{
-			if (n is Chunk c)
-			{
-				if (Obj.IsChunkWithinArea(c))
-				{
-					c.QueueFree();
-				}
-			}
-		}
+		ObjectiveChunkWorthInfo ocwi = Obj.SellChunks();
+		this.controlUi.AddCash(ocwi.SellWorth);
 	}
 
 
